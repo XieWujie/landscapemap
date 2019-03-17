@@ -5,30 +5,38 @@ import android.os.Bundle
 import android.widget.FrameLayout
 import android.widget.RadioGroup
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import android.content.Intent
+import android.net.Uri
+import androidx.fragment.app.Fragment
+import com.google.android.gms.maps.*
 
-class MapsActivity2 : AppCompatActivity(), OnMapReadyCallback {
+
+class MapsActivity2 : AppCompatActivity(), OnMapReadyCallback,OnStreetViewPanoramaReadyCallback{
 
     private lateinit var mMap: GoogleMap
-    private lateinit var contentLayout:FrameLayout
     private lateinit var group:RadioGroup
     private lateinit var mapFragment:SupportMapFragment
-    private lateinit var bigImageFragment: BigImageFragment
+    private lateinit var bigImageFragment: SupportStreetViewPanoramaFragment
+    private lateinit var position:LatLng
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps2)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        contentLayout = findViewById(R.id.contentLayout)
         group = findViewById(R.id.group)
         mapFragment = SupportMapFragment()
-        bigImageFragment = BigImageFragment()
+        bigImageFragment = SupportStreetViewPanoramaFragment.newInstance()
+        init()
+        bigImageFragment.getStreetViewPanoramaAsync(this)
         mapFragment.getMapAsync(this)
+
+    }
+
+    private fun init(){
+        val rawX = intent.getDoubleExtra("rawX",0.0)
+        val rawY = intent.getDoubleExtra("rawY",0.0)
+        position = LatLng(rawX, rawY)
         group.setOnCheckedChangeListener { group, checkedId ->
             when(checkedId){
                 R.id.map->supportFragmentManager.beginTransaction()
@@ -49,6 +57,7 @@ class MapsActivity2 : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -60,8 +69,6 @@ class MapsActivity2 : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        val intent = getIntent()
-        val bundle = intent.getBundleExtra("values")
         val rawX = intent.getDoubleExtra("rawX",0.0)
         val rawY = intent.getDoubleExtra("rawY",0.0)
         val name = intent.getIntExtra("imageSrc",0).toString()
@@ -72,4 +79,9 @@ class MapsActivity2 : AppCompatActivity(), OnMapReadyCallback {
             moveCamera(CameraUpdateFactory.newLatLngZoom(sydney,14f))
         }
     }
+
+    override fun onStreetViewPanoramaReady(p0: StreetViewPanorama?) {
+        p0?.setPosition(position)
+    }
+
 }
